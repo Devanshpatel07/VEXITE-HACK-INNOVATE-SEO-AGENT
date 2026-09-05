@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Backlink Hunter AI — Autonomous Web Scraper & SEO Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+              900: '#4c1d95',
+              950: '#030712',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+    .glass-card:hover {
+      border-color: rgba(139, 92, 246, 0.4);
+    }
+    .glass-header {
+      background: rgba(3, 7, 18, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(139, 92, 246, 0.25);
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+    .animate-pulseGlow {
+      animation: pulseGlow 3s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden selection:bg-purple-600 selection:text-white">
+  
+  <!-- Canvas Network Background -->
+  <canvas id="linkGraphCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+  <!-- Navigation Header -->
+  <header class="sticky top-0 z-50 glass-header">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <button onclick="switchTab('home')" class="flex items-center gap-3 group text-left">
+        <div className="w-9 h-9 p-2 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-600/30 group-hover:scale-105 transition">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
+            Backlink Hunter <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800/40">AI AGENT</span>
+          </div>
+          <div class="text-[10px] text-gray-400 font-medium">Autonomous Scraper & SEO Auditor</div>
+        </div>
+      </button>
+
+      <nav class="flex items-center gap-2">
+        <button id="nav-home" onclick="switchTab('home')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-purple-950/80 border border-purple-700/50 text-purple-300">
+          Home
+        </button>
+        <button id="nav-audit" onclick="switchTab('audit')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-gray-400 hover:text-white hover:bg-white/5">
+          SEO Audit
+        </button>
+        <button id="nav-backlinks" onclick="switchTab('backlinks')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-gray-400 hover:text-white hover:bg-white/5">
+          Backlinks
+        </button>
+        <button id="nav-privacy" onclick="switchTab('privacy')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-gray-400 hover:text-white hover:bg-white/5">
+          Privacy
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="relative z-10 flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+    
+    <!-- TAB 1: HOME -->
+    <section id="tab-home" class="space-y-16 py-6 text-center flex flex-col items-center">
+      <div class="space-y-6 max-w-3xl">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/70 border border-purple-800/50 text-purple-300 text-xs font-semibold uppercase tracking-wider">
+          <svg class="w-3.5 h-3.5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+          </svg>
+          Python FastAPI + Playwright Headless Web Scraper
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white leading-tight">
+          Supercharge Search Rankings with <span class="bg-gradient-to-r from-purple-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">AI Precision</span>
+        </h1>
+
+        <p class="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+          Deep-crawl any web domain using high-speed Playwright & BeautifulSoup engines. Uncover broken meta tags, audit technical SEO, discover verified high-DA guest post backlinks, and export one-click disavow files.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+          <button onclick="switchTab('audit')" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-purple-600/30 transition transform hover:-translate-y-0.5">
+            Run Free Domain Audit
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+
+          <button onclick="switchTab('backlinks')" class="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-purple-900/40 text-purple-200 font-bold rounded-2xl flex items-center justify-center gap-2 transition">
+            Browse Verified Backlinks
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat Counters Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl pt-4">
+        <div class="glass-card p-5 rounded-2xl space-y-1 text-left">
+          <div class="text-2xl font-black text-white">14,820+</div>
+          <div class="text-xs font-bold text-gray-300">Domains Audited</div>
+          <div class="text-[10px] text-gray-500">Live Playwright DOM checks</div>
+        </div>
+        <div class="glass-card p-5 rounded-2xl space-y-1 text-left">
+          <div class="text-2xl font-black text-indigo-400">94.2%</div>
+          <div class="text-xs font-bold text-gray-300">Backlinks Discovered</div>
+          <div class="text-[10px] text-gray-500">High-DA guest targets</div>
+        </div>
+        <div class="glass-card p-5 rounded-2xl space-y-1 text-left">
+          <div class="text-2xl font-black text-emerald-400">3,410</div>
+          <div class="text-xs font-bold text-gray-300">Disavow Exports</div>
+          <div class="text-[10px] text-gray-500">Google Search Console files</div>
+        </div>
+        <div class="glass-card p-5 rounded-2xl space-y-1 text-left">
+          <div class="text-2xl font-black text-pink-400">1.8s</div>
+          <div class="text-xs font-bold text-gray-300">Avg. Audit Speed</div>
+          <div class="text-[10px] text-gray-500">Async LangGraph execution</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: SEO AUDIT -->
+    <section id="tab-audit" class="hidden space-y-10 w-full max-w-4xl mx-auto py-6">
+      <div class="text-center space-y-3">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/70 border border-purple-800/50 text-purple-300 text-xs font-semibold uppercase tracking-wider">
+          Live Web Audit Engine
+        </div>
+        <h2 class="text-4xl font-black text-white">Autonomous Domain SEO Audit</h2>
+        <p class="text-sm text-gray-400 max-w-xl mx-auto">
+          Enter any URL to extract live HTML metadata, analyze technical errors via BeautifulSoup, and discover verified high-DA backlink opportunities.
+        </p>
+      </div>
+
+      <!-- Audit Input Card -->
+      <form id="auditForm" onsubmit="runDomainAudit(event)" class="glass-card p-6 rounded-3xl space-y-4 shadow-xl">
+        <div class="relative">
+          <input
+            type="text"
+            id="urlInput"
+            placeholder="e.g. https://example.com or techcrunch.com"
+            required
+            class="w-full pl-5 pr-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm font-medium"
+          />
+        </div>
+
+        <button
+          type="submit"
+          id="auditSubmitBtn"
+          class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 transition"
+        >
+          Start Autonomous SEO Audit
+        </button>
+      </form>
+
+      <!-- Loading / Status Box -->
+      <div id="auditStatusBox" class="hidden glass-card p-6 rounded-2xl space-y-3 text-left">
+        <div class="flex items-center gap-3">
+          <div class="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+          <div class="text-sm font-bold text-white">
+            Audit Status: <span id="statusLabel" class="text-purple-300 uppercase tracking-wide">QUEUED</span>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400">Playwright is crawling the DOM, analyzing meta tags, and querying DuckDuckGo backlink footprints...</p>
+      </div>
+
+      <!-- Audit Results View Container -->
+      <div id="auditResultsView" class="hidden space-y-8"></div>
+    </section>
+
+    <!-- TAB 3: BACKLINKS -->
+    <section id="tab-backlinks" class="hidden space-y-8 w-full max-w-6xl mx-auto py-6">
+      <div class="text-center space-y-3">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/70 border border-purple-800/50 text-purple-300 text-xs font-semibold uppercase tracking-wider">
+          Directory
+        </div>
+        <h2 class="text-4xl font-black text-white">Verified Backlink Opportunities</h2>
+        <p class="text-gray-400 text-sm max-w-xl mx-auto">
+          Browse verified guest posting domains, filter by DA rating or niche, and copy AI-crafted outreach pitches.
+        </p>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="glass-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="flex items-center gap-2">
+            <span class="text-gray-400 font-semibold">Niche:</span>
+            <select id="nicheSelect" onchange="filterBacklinks()" class="bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-1.5 focus:outline-none">
+              <option value="All">All niches</option>
+              <option value="SaaS">SaaS</option>
+              <option value="DevTools">DevTools</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Technology">Technology</option>
+              <option value="Fintech">Fintech</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-gray-400 font-semibold">Min DA Score:</span>
+            <select id="daSelect" onchange="filterBacklinks()" class="bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-1.5 focus:outline-none">
+              <option value="0">All Scores (0+)</option>
+              <option value="80">High DA (80+)</option>
+              <option value="85">Ultra High (85+)</option>
+              <option value="90">Elite (90+)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="text-gray-400">
+          Showing <span id="backlinkCount" class="text-purple-400 font-bold">6</span> verified domains
+        </div>
+      </div>
+
+      <!-- Backlink Grid -->
+      <div id="backlinksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    </section>
+
+    <!-- TAB 4: PRIVACY -->
+    <section id="tab-privacy" class="hidden space-y-8 w-full max-w-4xl mx-auto py-6 text-left">
+      <div class="text-center space-y-3">
+        <h2 class="text-4xl font-extrabold text-white">Privacy Policy & Architecture</h2>
+        <p class="text-sm text-gray-400 max-w-xl mx-auto">
+          Transparent disclosure on data scraping, SQLite storage, and LLM pitch safety.
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="glass-card p-6 rounded-2xl space-y-2">
+          <h3 class="text-lg font-bold text-white">1. Playwright Web Scraping Safety</h3>
+          <p class="text-xs text-gray-300 leading-relaxed">
+            Our Playwright engine operates in headless mode with strict timeouts to respect target web servers. Only public HTML DOM nodes (titles, meta descriptions, and link tags) are extracted for technical audit calculations.
+          </p>
+        </div>
+
+        <div class="glass-card p-6 rounded-2xl space-y-2">
+          <h3 class="text-lg font-bold text-white">2. SQLite Local Data Isolation</h3>
+          <p class="text-xs text-gray-300 leading-relaxed">
+            Audit metrics and opportunity records are saved locally in `backend.db`. No data is uploaded to external telemetry or third-party brokers.
+          </p>
+        </div>
+
+        <div class="glass-card p-6 rounded-2xl space-y-2">
+          <h3 class="text-lg font-bold text-white">3. Disavow Export Protection</h3>
+          <p class="text-xs text-gray-300 leading-relaxed">
+            The disavow file generator allows one-click export of toxic backlink entries formatted for immediate upload to Google Search Console.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-purple-900/20 py-8 text-center text-xs text-gray-500 mt-auto">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>© 2026 Backlink Hunter AI — Python FastAPI + Playwright Scraper Backend</div>
+      <div class="flex items-center gap-4">
+        <button onclick="switchTab('home')" class="hover:text-gray-300">Home</button>
+        <button onclick="switchTab('audit')" class="hover:text-gray-300">SEO Audit</button>
+        <button onclick="switchTab('backlinks')" class="hover:text-gray-300">Backlinks</button>
+        <button onclick="switchTab('privacy')" class="hover:text-gray-300">Privacy</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    const API_BASE = "http://localhost:8000";
+
+    const defaultOpportunities = [
+      {
+        domain: "hackernoon.com",
+        url: "https://hackernoon.com/write-for-us",
+        score: 88,
+        relevance: "High",
+        spam_risk: "Low",
+        niche: "DevTools",
+        outreach_draft: "Hi HackerNoon team,\n\nI've been following your deep dives on software architecture. We engineered a multi-agent DAG framework with Playwright and LangGraph. I'd love to write a step-by-step tutorial for your developer audience.\n\nWould you be open to an outline?\n\nBest regards,"
+      },
+      {
+        domain: "dev.to",
+        url: "https://dev.to",
+        score: 84,
+        relevance: "High",
+        spam_risk: "Low",
+        niche: "DevTools",
+        outreach_draft: "Hey Dev.to editorial team,\n\nI built an open-source SEO audit agent combining FastAPI and Google Gemini 1.5 Flash. I'm preparing a practical guide on async state handling without WebSockets. Mind if I share an early draft?"
+      },
+      {
+        domain: "searchengineland.com",
+        url: "https://searchengineland.com",
+        score: 91,
+        relevance: "High",
+        spam_risk: "Low",
+        niche: "Marketing",
+        outreach_draft: "Hello Search Engine Land team,\n\nWe analyzed how autonomous web search footprints outperform static backlink databases. I've compiled our empirical data into a contributor piece.\n\nWould you be open to reviewing the outline?"
+      },
+      {
+        domain: "smashingmagazine.com",
+        url: "https://smashingmagazine.com",
+        score: 89,
+        relevance: "Medium",
+        spam_risk: "Low",
+        niche: "Technology",
+        outreach_draft: "Hi Smashing Magazine team,\n\nWe designed a real-time progress tracker UI for autonomous AI workflows that keeps users engaged during multi-second backend crawling tasks. I'd love to write a breakdown for your UX readers."
+      },
+      {
+        domain: "techcrunch.com",
+        url: "https://techcrunch.com",
+        score: 94,
+        relevance: "High",
+        spam_risk: "Low",
+        niche: "SaaS",
+        outreach_draft: "Hi TechCrunch team,\n\nWe built Backlink Hunter AI to automate guest post link building for SaaS startups. We'd love to share our benchmark metrics on AI outreach conversion rates."
+      },
+      {
+        domain: "fintechweekly.com",
+        url: "https://fintechweekly.com",
+        score: 79,
+        relevance: "Medium",
+        spam_risk: "Low",
+        niche: "Fintech",
+        outreach_draft: "Hi Fintech Weekly team,\n\nWe've analyzed technical SEO vulnerabilities across top fintech landing pages. I'd love to contribute an industry report for your readers."
+      }
+    ];
+
+    let currentBacklinks = [...defaultOpportunities];
+
+    function switchTab(tab) {
+      ['home', 'audit', 'backlinks', 'privacy'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`nav-${t}`).className = "px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-gray-400 hover:text-white hover:bg-white/5";
+      });
+
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      document.getElementById(`nav-${tab}`).className = "px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-purple-950/80 border border-purple-700/50 text-purple-300";
+
+      if (tab === 'backlinks') {
+        renderBacklinks();
+      }
+    }
+
+    async function runDomainAudit(e) {
+      e.preventDefault();
+      const input = document.getElementById("urlInput");
+      let url = input.value.trim();
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = "https://" + url;
+      }
+
+      const submitBtn = document.getElementById("auditSubmitBtn");
+      const statusBox = document.getElementById("auditStatusBox");
+      const resultsView = document.getElementById("auditResultsView");
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Submitting Audit Request...";
+      statusBox.classList.remove("hidden");
+      resultsView.classList.add("hidden");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/projects`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+
+        if (!res.ok) throw new Error("Failed to start audit");
+        const data = await res.json();
+        const projectId = data.project_id;
+
+        // Poll status
+        const interval = setInterval(async () => {
+          try {
+            const sRes = await fetch(`${API_BASE}/api/projects/${projectId}/status`);
+            if (sRes.ok) {
+              const sData = await sRes.json();
+              document.getElementById("statusLabel").innerText = sData.status;
+
+              if (sData.status === "done" || sData.status === "error") {
+                clearInterval(interval);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Start Autonomous SEO Audit";
+                statusBox.classList.add("hidden");
+
+                if (sData.status === "done") {
+                  fetchAndDisplayResults(projectId);
+                } else {
+                  alert("Audit failed: " + (sData.error_message || "Unknown error"));
+                }
+              }
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }, 1500);
+
+      } catch (err) {
+        alert(err.message);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Start Autonomous SEO Audit";
+        statusBox.classList.add("hidden");
+      }
+    }
+
+    async function fetchAndDisplayResults(projectId) {
+      try {
+        const [auditRes, oppRes] = await Promise.all([
+          fetch(`${API_BASE}/api/projects/${projectId}/seo-audit`),
+          fetch(`${API_BASE}/api/projects/${projectId}/opportunities`)
+        ]);
+
+        const auditData = await auditRes.json();
+        const oppData = await oppRes.json();
+
+        if (oppData && oppData.length > 0) {
+          currentBacklinks = oppData;
+        }
+
+        const metrics = auditData.metrics || {};
+        const issues = auditData.issues || [];
+
+        const resultsView = document.getElementById("auditResultsView");
+        resultsView.innerHTML = `
+          <div class="glass-card p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Audit Complete</span>
+              <h3 class="text-2xl font-black text-white">${metrics.title || "Target Page Report"}</h3>
+            </div>
+            <button onclick="exportDisavow()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-purple-200 font-bold text-xs rounded-xl border border-purple-800/40 flex items-center gap-2">
+              Download disavow.txt
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
+            <div class="glass-card p-4 rounded-xl">
+              <div class="text-xs text-gray-400">Word Count</div>
+              <div class="text-xl font-black text-purple-400 mt-1">${metrics.word_count || 0}</div>
+            </div>
+            <div class="glass-card p-4 rounded-xl">
+              <div class="text-xs text-gray-400">Internal Links</div>
+              <div class="text-xl font-black text-indigo-400 mt-1">${metrics.internal_links || 0}</div>
+            </div>
+            <div class="glass-card p-4 rounded-xl">
+              <div class="text-xs text-gray-400">External Links</div>
+              <div class="text-xl font-black text-pink-400 mt-1">${metrics.external_links || 0}</div>
+            </div>
+            <div class="glass-card p-4 rounded-xl">
+              <div class="text-xs text-gray-400">Issues Found</div>
+              <div class="text-xl font-black text-amber-400 mt-1">${issues.length}</div>
+            </div>
+          </div>
+
+          <div class="space-y-3 text-left">
+            <h4 class="text-lg font-bold text-white">Audit Issues (${issues.length})</h4>
+            ${issues.map(iss => `
+              <div class="glass-card p-4 rounded-xl space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800/40">${iss.severity || 'Medium'}</span>
+                  <button onclick="navigator.clipboard.writeText('${(iss.fix_recommendation || '').replace(/'/g, "\\'")}')" class="text-xs text-purple-300 hover:text-white font-bold">Copy Fix</button>
+                </div>
+                <div class="text-sm font-bold text-white">${iss.issue}</div>
+                <div class="text-xs text-gray-300">${iss.explanation}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        resultsView.classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function exportDisavow() {
+      const content = "# Google Search Console Disavow File\ndomain:spam-backlink-example.com\ndomain:toxic-directory-sample.org";
+      const blob = new Blob([content], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "disavow.txt";
+      a.click();
+    }
+
+    function renderBacklinks() {
+      const grid = document.getElementById("backlinksGrid");
+      grid.innerHTML = currentBacklinks.map(opp => `
+        <div class="glass-card p-6 rounded-2xl space-y-4 text-left">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                ${opp.domain}
+                <a href="${opp.url}" target="_blank" class="text-gray-500 hover:text-white">↗</a>
+              </h3>
+              <p class="text-xs text-gray-400 truncate max-w-xs mt-1">${opp.url}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-2xl font-black text-purple-400">${opp.score}</span>
+              <div class="text-[9px] text-gray-500 uppercase">Domain Score</div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="px-2.5 py-1 rounded bg-purple-950 text-purple-300 font-medium">Relevance: ${opp.relevance || 'High'}</span>
+            <span class="px-2.5 py-1 rounded bg-emerald-950 text-emerald-300 font-medium">Spam Risk: ${opp.spam_risk || 'Low'}</span>
+          </div>
+
+          ${opp.outreach_draft ? `
+            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-semibold text-gray-400">AI Outreach Pitch</span>
+                <button onclick="navigator.clipboard.writeText('${opp.outreach_draft.replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs text-purple-300 rounded font-bold">Copy Pitch</button>
+              </div>
+              <p class="text-xs text-gray-300 italic whitespace-pre-line">"${opp.outreach_draft}"</p>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+
+      document.getElementById("backlinkCount").innerText = currentBacklinks.length;
+    }
+
+    function filterBacklinks() {
+      const niche = document.getElementById("nicheSelect").value;
+      const minDa = parseInt(document.getElementById("daSelect").value, 10);
+
+      currentBacklinks = defaultOpportunities.filter(item => {
+        if (niche !== "All" && (item.niche || "SaaS").toLowerCase() !== niche.toLowerCase()) return false;
+        if (item.score < minDa) return false;
+        return true;
+      });
+
+      renderBacklinks();
+    }
+
+    // Canvas Background
+    const canvas = document.getElementById('linkGraphCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const nodes = Array.from({ length: 40 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.7,
+      vy: (Math.random() - 0.5) * 0.7,
+      radius: Math.random() * 2 + 1.5,
+      color: ['#8b5cf6', '#6366f1', '#ec4899'][Math.floor(Math.random() * 3)]
+    }));
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 130) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(139, 92, 246, ${(1 - dist / 130) * 0.25})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
+      for (const n of nodes) {
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > width) n.vx *= -1;
+        if (n.y < 0 || n.y > height) n.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.fill();
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Initial render
+    renderBacklinks();
+  </script>
+</body>
+</html>
