@@ -92,10 +92,107 @@ async def scrap_node(state: Dict) -> Dict:
         return {"error": str(e), "status": "error"}
 
 async def audit_node(state: Dict) -> Dict:
-    logger.info("Auditing content...")
+    logger.info("Auditing content with multi-rule static engine & LLM...")
     if "error" in state:
         return state
         
+    title = state.get("title", "")
+    meta_desc = state.get("meta_description", "")
+    word_count = state.get("word_count", 0)
+    int_links = state.get("internal_links", 0)
+    ext_links = state.get("external_links", 0)
+    html_text = state.get("html", "")
+    
+    # 1. Rule-Based Technical SEO Inspection
+    static_issues = []
+    
+    # Check 1: Title Tag
+    if not title:
+        static_issues.append({
+            "issue": "Missing Title Tag (<title>)",
+            "severity": "high",
+            "category": "On-Page SEO",
+            "explanation": "The webpage is missing a primary <title> tag, which is critical for search engine indexing and click-through rates.",
+            "fix_recommendation": "<title>Primary Keyword - Brand Name</title>"
+        })
+    elif len(title) < 20 or len(title) > 70:
+        static_issues.append({
+            "issue": f"Suboptimal Title Tag Length ({len(title)} chars)",
+            "severity": "medium",
+            "category": "On-Page SEO",
+            "explanation": f"Current title length is {len(title)} characters. Search engines truncate titles over 60-70 characters, while titles under 20 characters lose keyword relevance.",
+            "fix_recommendation": "Keep page title length between 50 and 60 characters with main target keywords."
+        })
+        
+    # Check 2: Meta Description
+    if not meta_desc:
+        static_issues.append({
+            "issue": "Missing Meta Description Tag",
+            "severity": "high",
+            "category": "On-Page SEO",
+            "explanation": "Search engines use meta descriptions for search result snippets. Without it, search engines auto-generate snippet text which lowers SERP CTR.",
+            "fix_recommendation": "<meta name='description' content='Compelling 150-160 character summary with target keywords.'/>"
+        })
+    elif len(meta_desc) < 120 or len(meta_desc) > 170:
+        static_issues.append({
+            "issue": f"Meta Description Length Warning ({len(meta_desc)} chars)",
+            "severity": "medium",
+            "category": "On-Page SEO",
+            "explanation": "Optimal meta description length is 150-160 characters to avoid snippet truncation in Google SERPs.",
+            "fix_recommendation": "Adjust meta description length to 150-160 characters."
+        })
+        
+    # Check 3: Word Count / Thin Content
+    if word_count < 300:
+        static_issues.append({
+            "issue": f"Thin Body Content ({word_count} words)",
+            "severity": "high",
+            "category": "Content",
+            "explanation": f"Page contains only {word_count} words. Search engines favor comprehensive content with at least 600-1,000 words.",
+            "fix_recommendation": "Expand body text with relevant subheadings (H2, H3), FAQ sections, and authoritative details."
+        })
+
+    # Check 4: Heading Structure
+    if "<h1>" not in html_text.lower() and "h1" not in html_text.lower():
+        static_issues.append({
+            "issue": "Missing Primary Heading <h1> Tag",
+            "severity": "high",
+            "category": "On-Page SEO",
+            "explanation": "No <h1> heading was detected. Google relies on H1 headings to determine page topic hierarchy.",
+            "fix_recommendation": "<h1>Main Focus Keyword Title</h1>"
+        })
+        
+    # Check 5: OpenGraph & Social Metadata
+    if "og:image" not in html_text.lower():
+        static_issues.append({
+            "issue": "Missing OpenGraph Social Tags (og:image)",
+            "severity": "medium",
+            "category": "Security & Tags",
+            "explanation": "Missing og:image social share meta tags results in blank link previews on Twitter, LinkedIn, and Slack.",
+            "fix_recommendation": "<meta property='og:image' content='https://yourdomain.com/og-cover.png'/>"
+        })
+
+    # Check 6: Canonical Link Tag
+    if "rel=\"canonical\"" not in html_text.lower() and "rel='canonical'" not in html_text.lower():
+        static_issues.append({
+            "issue": "Missing Canonical Tag (rel='canonical')",
+            "severity": "medium",
+            "category": "Security & Tags",
+            "explanation": "Without a canonical tag, URL parameter variations or HTTP/HTTPS duplicate versions can trigger duplicate content penalties.",
+            "fix_recommendation": "<link rel='canonical' href='https://yourdomain.com/page-path'/>"
+        })
+
+    # Check 7: Internal vs External Link Ratio
+    if int_links == 0:
+        static_issues.append({
+            "issue": "Zero Internal Links Detected",
+            "severity": "high",
+            "category": "Link Architecture",
+            "explanation": "Internal link architecture passes link equity across your website. Zero internal links limits crawl depth.",
+            "fix_recommendation": "Add 3-5 contextual internal links to related topic pages or services."
+        })
+        
+    # 2. Combine with LLM Analysis if Available
     try:
         llm = get_llm(temperature=0)
         structured_llm = llm.with_structured_output(SEOReport, method="json_mode")
@@ -104,12 +201,12 @@ async def audit_node(state: Dict) -> Dict:
         You are an elite SEO auditor. Analyze the following webpage text and metrics.
         Identify On-Page SEO errors (like missing H1, short meta description, weak word count, etc).
         
-        Title: {state.get("title")}
-        Meta Description: {state.get("meta_description")}
-        Word Count: {state.get("word_count")}
+        Title: {title}
+        Meta Description: {meta_desc}
+        Word Count: {word_count}
         
         Body text snapshot:
-        {state.get("html", "")[:2000]}
+        {html_text[:2000]}
 
         Return ONLY a JSON object matching this format:
         {{
@@ -126,17 +223,20 @@ async def audit_node(state: Dict) -> Dict:
         
         result = await structured_llm.ainvoke(prompt)
         if hasattr(result, "seo_errors"):
-            seo_errors = [issue.dict() for issue in result.seo_errors]
+            llm_issues = [issue.dict() for issue in result.seo_errors]
         elif isinstance(result, dict) and "seo_errors" in result:
-            seo_errors = result["seo_errors"]
+            llm_issues = result["seo_errors"]
         else:
-            seo_errors = []
-        
-        return {"seo_errors": seo_errors, "status": "finding_backlinks"}
+            llm_issues = []
+            
+        for issue in llm_issues:
+            if "category" not in issue:
+                issue["category"] = "On-Page SEO"
+            static_issues.append(issue)
     except Exception as e:
-        # Fallback if OPENAI_API_KEY fails or is missing
-        logger.error(f"Audit LLM Error: {e}")
-        return {"seo_errors": [{"issue": "API Key Missing or Error", "severity": "high", "explanation": str(e), "fix_recommendation": "Check backend/.env for GROQ_API_KEY"}], "status": "finding_backlinks"}
+        logger.warning(f"LLM audit fallback used: {e}")
+
+    return {"seo_errors": static_issues, "status": "finding_backlinks"}
 
 async def backlink_discovery_node(state: Dict) -> Dict:
     logger.info("Discovering rich backlink opportunities across multiple search footprints...")

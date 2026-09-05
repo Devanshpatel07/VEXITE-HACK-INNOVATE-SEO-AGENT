@@ -436,6 +436,10 @@
       }
     }
 
+    let currentAuditIssues = [];
+    let showAllAuditIssues = false;
+    let selectedIssueCategory = 'All';
+
     async function fetchAndDisplayResults(projectId) {
       try {
         const [auditRes, oppRes] = await Promise.all([
@@ -451,58 +455,167 @@
         }
 
         const metrics = auditData.metrics || {};
-        const issues = auditData.issues || [];
+        currentAuditIssues = auditData.issues || [];
+        showAllAuditIssues = false;
+        selectedIssueCategory = 'All';
+
+        // Calculate SEO Health Score
+        let highCount = currentAuditIssues.filter(i => (i.severity || '').toLowerCase() === 'high').length;
+        let medCount = currentAuditIssues.filter(i => (i.severity || '').toLowerCase() === 'medium').length;
+        let score = Math.max(35, 100 - (highCount * 12) - (medCount * 5));
+        let grade = score >= 90 ? 'A+' : score >= 80 ? 'B+' : score >= 70 ? 'B' : score >= 60 ? 'C' : 'D';
 
         const resultsView = document.getElementById("auditResultsView");
         resultsView.innerHTML = `
-          <div class="glass-card p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Audit Complete</span>
-              <h3 class="text-2xl font-black text-white">${metrics.title || "Target Page Report"}</h3>
+          <div class="glass-card p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="space-y-1 text-left">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Audit Complete</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-950 text-purple-300 border border-purple-800/40">Grade ${grade}</span>
+              </div>
+              <h3 class="text-2xl font-black text-white">${metrics.title || "Target Domain Report"}</h3>
             </div>
-            <button onclick="exportDisavow()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-purple-200 font-bold text-xs rounded-xl border border-purple-800/40 flex items-center gap-2">
-              Download disavow.txt
-            </button>
+            
+            <div class="flex items-center gap-4">
+              <div class="text-center px-4 py-2 bg-slate-950 rounded-xl border border-slate-800">
+                <div class="text-xs text-gray-400 font-semibold">SEO Health Score</div>
+                <div class="text-2xl font-black ${score >= 80 ? 'text-emerald-400' : 'text-amber-400'}">${score}/100</div>
+              </div>
+              <button onclick="exportDisavow()" class="px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-600/30 flex items-center gap-2">
+                Download disavow.txt
+              </button>
+            </div>
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
             <div class="glass-card p-4 rounded-xl">
-              <div class="text-xs text-gray-400">Word Count</div>
+              <div class="text-xs text-gray-400 font-semibold">Word Count</div>
               <div class="text-xl font-black text-purple-400 mt-1">${metrics.word_count || 0}</div>
             </div>
             <div class="glass-card p-4 rounded-xl">
-              <div class="text-xs text-gray-400">Internal Links</div>
+              <div class="text-xs text-gray-400 font-semibold">Internal Links</div>
               <div class="text-xl font-black text-indigo-400 mt-1">${metrics.internal_links || 0}</div>
             </div>
             <div class="glass-card p-4 rounded-xl">
-              <div class="text-xs text-gray-400">External Links</div>
+              <div class="text-xs text-gray-400 font-semibold">External Links</div>
               <div class="text-xl font-black text-pink-400 mt-1">${metrics.external_links || 0}</div>
             </div>
             <div class="glass-card p-4 rounded-xl">
-              <div class="text-xs text-gray-400">Issues Found</div>
-              <div class="text-xl font-black text-amber-400 mt-1">${issues.length}</div>
+              <div class="text-xs text-gray-400 font-semibold">Issues Found</div>
+              <div class="text-xl font-black text-amber-400 mt-1">${currentAuditIssues.length}</div>
             </div>
           </div>
 
-          <div class="space-y-3 text-left">
-            <h4 class="text-lg font-bold text-white">Audit Issues (${issues.length})</h4>
-            ${issues.map(iss => `
-              <div class="glass-card p-4 rounded-xl space-y-2">
-                <div class="flex justify-between items-center">
-                  <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800/40">${iss.severity || 'Medium'}</span>
-                  <button onclick="navigator.clipboard.writeText('${(iss.fix_recommendation || '').replace(/'/g, "\\'")}')" class="text-xs text-purple-300 hover:text-white font-bold">Copy Fix</button>
-                </div>
-                <div class="text-sm font-bold text-white">${iss.issue}</div>
-                <div class="text-xs text-gray-300">${iss.explanation}</div>
+          <!-- Audit Issues Section -->
+          <div class="space-y-4 text-left">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-900/30 pb-3">
+              <div>
+                <h4 class="text-xl font-extrabold text-white flex items-center gap-2">
+                  Technical SEO Audit Issues 
+                  <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800/40 font-bold">${currentAuditIssues.length} Total</span>
+                </h4>
+                <p class="text-xs text-gray-400 mt-0.5">Categorized diagnostic report & actionable code recommendations</p>
               </div>
-            `).join('')}
+
+              <!-- Issue Category Filter Tabs -->
+              <div class="flex flex-wrap gap-1.5 text-xs">
+                <button onclick="filterAuditIssues('All')" id="issue-cat-All" class="px-3 py-1 rounded-lg font-bold bg-purple-600 text-white transition">All</button>
+                <button onclick="filterAuditIssues('On-Page SEO')" id="issue-cat-On-Page SEO" class="px-3 py-1 rounded-lg font-semibold bg-slate-900 text-gray-400 hover:text-white transition">On-Page</button>
+                <button onclick="filterAuditIssues('Content')" id="issue-cat-Content" class="px-3 py-1 rounded-lg font-semibold bg-slate-900 text-gray-400 hover:text-white transition">Content</button>
+                <button onclick="filterAuditIssues('Security & Tags')" id="issue-cat-Security & Tags" class="px-3 py-1 rounded-lg font-semibold bg-slate-900 text-gray-400 hover:text-white transition">Security & Tags</button>
+                <button onclick="filterAuditIssues('Link Architecture')" id="issue-cat-Link Architecture" class="px-3 py-1 rounded-lg font-semibold bg-slate-900 text-gray-400 hover:text-white transition">Links</button>
+              </div>
+            </div>
+
+            <!-- Issues List Container -->
+            <div id="auditIssuesList" class="space-y-3"></div>
+
+            <!-- Show More / Show Less Toggle Button -->
+            <div id="showMoreBox" class="text-center pt-2"></div>
           </div>
         `;
 
         resultsView.classList.remove("hidden");
+        renderAuditIssues();
       } catch (err) {
         console.error(err);
       }
+    }
+
+    function renderAuditIssues() {
+      const container = document.getElementById("auditIssuesList");
+      const showMoreBox = document.getElementById("showMoreBox");
+      if (!container) return;
+
+      let filtered = currentAuditIssues.filter(item => {
+        if (selectedIssueCategory === 'All') return true;
+        return (item.category || '').toLowerCase() === selectedIssueCategory.toLowerCase();
+      });
+
+      const displayItems = showAllAuditIssues ? filtered : filtered.slice(0, 4);
+
+      container.innerHTML = displayItems.map((iss, idx) => {
+        const severity = (iss.severity || 'medium').toLowerCase();
+        const badgeColor = severity === 'high' ? 'bg-red-950 text-red-300 border-red-800/50' : severity === 'medium' ? 'bg-amber-950 text-amber-300 border-amber-800/50' : 'bg-blue-950 text-blue-300 border-blue-800/50';
+        const catName = iss.category || 'On-Page SEO';
+
+        return `
+          <div class="glass-card p-5 rounded-2xl space-y-3 border border-slate-800/80 hover:border-purple-600/40 transition">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${badgeColor}">${severity}</span>
+                <span class="text-[10px] font-bold uppercase px-2.5 py-1 rounded-md bg-purple-950/80 text-purple-300 border border-purple-800/40">${catName}</span>
+              </div>
+              <button onclick="navigator.clipboard.writeText('${(iss.fix_recommendation || '').replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-xs text-purple-300 font-bold rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copy Fix
+              </button>
+            </div>
+
+            <div>
+              <div class="text-base font-extrabold text-white">${iss.issue}</div>
+              <p class="text-xs text-gray-300 mt-1 leading-relaxed">${iss.explanation}</p>
+            </div>
+
+            ${iss.fix_recommendation ? `
+              <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 font-mono text-xs text-purple-200 overflow-x-auto">
+                <span class="text-[10px] font-sans font-bold text-gray-500 uppercase block mb-1">Recommended Implementation:</span>
+                <code>${iss.fix_recommendation}</code>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      if (filtered.length > 4) {
+        showMoreBox.innerHTML = `
+          <button onclick="toggleShowAllIssues()" class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-purple-800/50 text-purple-200 font-extrabold text-xs rounded-xl shadow-lg transition">
+            ${showAllAuditIssues ? 'Show Fewer Issues' : `Show More Audit Issues (${filtered.length - 4} remaining)`}
+          </button>
+        `;
+      } else {
+        showMoreBox.innerHTML = '';
+      }
+    }
+
+    function filterAuditIssues(category) {
+      selectedIssueCategory = category;
+      ['All', 'On-Page SEO', 'Content', 'Security & Tags', 'Link Architecture'].forEach(cat => {
+        const btn = document.getElementById(`issue-cat-${cat}`);
+        if (btn) {
+          if (cat === category) {
+            btn.className = "px-3 py-1 rounded-lg font-bold bg-purple-600 text-white transition";
+          } else {
+            btn.className = "px-3 py-1 rounded-lg font-semibold bg-slate-900 text-gray-400 hover:text-white transition";
+          }
+        }
+      });
+      renderAuditIssues();
+    }
+
+    function toggleShowAllIssues() {
+      showAllAuditIssues = !showAllAuditIssues;
+      renderAuditIssues();
     }
 
     function exportDisavow() {
