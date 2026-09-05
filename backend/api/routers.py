@@ -27,12 +27,43 @@ class ProjectResponse(BaseModel):
 class GoogleAuthRequest(BaseModel):
     credential: str
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class RegisterRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
 @router.post("/auth/google")
 async def google_auth(req: GoogleAuthRequest):
     return {
         "status": "authenticated",
         "client_id": "411176906066-ctilf76ua21mrim2cot5skr7uckiqq4d.apps.googleusercontent.com",
         "message": "Google Authentication Verified Successfully"
+    }
+
+@router.post("/auth/login")
+async def login_user(req: LoginRequest):
+    return {
+        "status": "success",
+        "user": {
+            "name": req.email.split("@")[0].capitalize(),
+            "email": req.email,
+            "picture": f"https://api.dicebear.com/7.x/avataaars/svg?seed={req.email}"
+        }
+    }
+
+@router.post("/auth/register")
+async def register_user(req: RegisterRequest):
+    return {
+        "status": "success",
+        "user": {
+            "name": req.name or req.email.split("@")[0].capitalize(),
+            "email": req.email,
+            "picture": f"https://api.dicebear.com/7.x/avataaars/svg?seed={req.email}"
+        }
     }
 
 async def process_project_task(project_id: str, url: str, db: AsyncSession):

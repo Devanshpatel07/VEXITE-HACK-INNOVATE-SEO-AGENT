@@ -96,15 +96,25 @@
           Privacy
         </button>
 
-        <!-- Google Authentication Widget (Desktop) -->
-        <div id="googleAuthNav" class="ml-2 flex items-center gap-2">
+        <!-- Sign In / Sign Up & Auth State (Desktop) -->
+        <div id="authNavButtons" class="ml-2 flex items-center gap-2">
+          <!-- Unauthenticated Buttons -->
+          <div id="loggedOutButtons" class="flex items-center gap-2">
+            <button onclick="openAuthModal('signin')" class="px-3.5 py-2 text-xs font-bold text-gray-300 hover:text-white bg-slate-900 border border-slate-700/60 rounded-xl hover:border-purple-600 transition">
+              Sign In
+            </button>
+            <button onclick="openAuthModal('signup')" class="px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-600/30 transition">
+              Sign Up
+            </button>
+          </div>
+
           <div id="g_id_onload"
             data-client_id="411176906066-ctilf76ua21mrim2cot5skr7uckiqq4d.apps.googleusercontent.com"
             data-callback="handleCredentialResponse"
             data-auto_prompt="false">
           </div>
-          <div id="googleSignInBtn" class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-size="small"></div>
           
+          <!-- Authenticated Profile Badge -->
           <div id="userProfileBadge" class="hidden flex items-center gap-2 bg-slate-900 border border-purple-800/40 rounded-xl px-2.5 py-1 shadow-lg">
             <img id="userAvatar" src="" class="w-6 h-6 rounded-full border border-purple-400 object-cover" alt="User Avatar"/>
             <span id="userName" class="text-xs font-bold text-white max-w-[90px] truncate"></span>
@@ -117,7 +127,6 @@
 
       <!-- Mobile Hamburger Button -->
       <div class="flex items-center gap-2 md:hidden">
-        <div id="googleSignInBtnMobile" class="g_id_signin" data-type="icon" data-shape="circle" data-theme="outline"></div>
         <button onclick="toggleMobileMenu()" class="p-2 rounded-xl bg-slate-900 border border-purple-800/40 text-purple-300 hover:text-white">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -140,6 +149,15 @@
       <button onclick="switchTab('privacy'); toggleMobileMenu();" class="w-full text-left px-4 py-2 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/5">
         Privacy
       </button>
+
+      <div id="mobileAuthBox" class="pt-2 border-t border-purple-900/30 flex gap-2">
+        <button onclick="openAuthModal('signin'); toggleMobileMenu();" class="w-1/2 py-2 text-xs font-bold text-gray-300 bg-slate-900 border border-slate-800 rounded-xl text-center">
+          Sign In
+        </button>
+        <button onclick="openAuthModal('signup'); toggleMobileMenu();" class="w-1/2 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl text-center shadow-lg shadow-purple-600/30">
+          Sign Up
+        </button>
+      </div>
     </div>
   </header>
 
@@ -343,6 +361,84 @@
     </div>
   </footer>
 
+  <!-- Sign In / Sign Up Modal Overlay -->
+  <div id="authModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-md p-6 sm:p-8 rounded-3xl space-y-6 relative border border-purple-800/50 shadow-2xl animate-in fade-in zoom-in duration-200">
+      
+      <!-- Close Button -->
+      <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white transition p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <!-- Modal Header & Subtitle -->
+      <div class="text-center space-y-2">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-600/30">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <h3 id="authModalTitle" class="text-2xl font-black text-white">Sign In to Backlink Hunter</h3>
+        <p id="authModalSubtitle" class="text-xs text-gray-400">Access autonomous SEO audits, backlink tracking, and outreach drafts.</p>
+      </div>
+
+      <!-- Tab Toggle (Sign In vs Sign Up) -->
+      <div class="grid grid-cols-2 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs font-bold">
+        <button id="authTabSignin" onclick="setAuthMode('signin')" class="py-2.5 rounded-lg text-purple-300 bg-purple-950/80 border border-purple-700/50 transition">
+          Sign In
+        </button>
+        <button id="authTabSignup" onclick="setAuthMode('signup')" class="py-2.5 rounded-lg text-gray-400 hover:text-white transition">
+          Sign Up
+        </button>
+      </div>
+
+      <!-- Google 1-Click Authentication Button Container -->
+      <div class="space-y-3">
+        <div class="flex justify-center">
+          <div id="googleSignInBtnModal" class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-size="large" data-logo_alignment="left"></div>
+        </div>
+        
+        <div class="relative flex items-center justify-center">
+          <div class="border-t border-slate-800 w-full"></div>
+          <span class="bg-slate-900 px-3 text-[10px] uppercase font-bold text-gray-500 shrink-0">Or continue with email</span>
+          <div class="border-t border-slate-800 w-full"></div>
+        </div>
+      </div>
+
+      <!-- Form Inputs -->
+      <form id="authEmailForm" onsubmit="submitEmailAuth(event)" class="space-y-4 text-left">
+        <div id="nameFieldGroup" class="hidden space-y-1">
+          <label class="text-xs font-bold text-gray-300">Full Name</label>
+          <input type="text" id="authNameInput" placeholder="Devansh Patel" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"/>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-300">Email Address</label>
+          <input type="email" id="authEmailInput" required placeholder="you@company.com" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"/>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-300">Password</label>
+          <input type="password" id="authPasswordInput" required placeholder="••••••••" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"/>
+        </div>
+
+        <button type="submit" id="authSubmitBtn" class="w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-purple-600/30 transition">
+          Sign In
+        </button>
+      </form>
+
+      <!-- Modal Footer Switcher Link -->
+      <div class="text-center text-xs text-gray-400">
+        <span id="authSwitchText">Don't have an account?</span>
+        <button onclick="toggleAuthMode()" id="authSwitchBtn" class="text-purple-400 hover:text-purple-300 font-bold ml-1 underline">
+          Sign Up free
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Application Logic -->
   <script>
     const API_BASE = "";
@@ -381,21 +477,113 @@
       }
     }
 
+    let currentAuthMode = 'signin';
+
+    function openAuthModal(mode = 'signin') {
+      setAuthMode(mode);
+      const modal = document.getElementById('authModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        // Render Google GSI button inside modal
+        if (window.google && google.accounts && google.accounts.id) {
+          try {
+            google.accounts.id.renderButton(
+              document.getElementById("googleSignInBtnModal"),
+              { theme: "outline", size: "large", type: "standard", shape: "pill", width: 280 }
+            );
+          } catch(e) {}
+        }
+      }
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function setAuthMode(mode) {
+      currentAuthMode = mode;
+      const title = document.getElementById('authModalTitle');
+      const subtitle = document.getElementById('authModalSubtitle');
+      const tabSignin = document.getElementById('authTabSignin');
+      const tabSignup = document.getElementById('authTabSignup');
+      const nameGroup = document.getElementById('nameFieldGroup');
+      const submitBtn = document.getElementById('authSubmitBtn');
+      const switchText = document.getElementById('authSwitchText');
+      const switchBtn = document.getElementById('authSwitchBtn');
+
+      if (mode === 'signup') {
+        if (title) title.innerText = "Create Your Free Account";
+        if (subtitle) subtitle.innerText = "Unlock unlimited domain SEO audits and AI outreach drafts.";
+        if (tabSignin) tabSignin.className = "py-2.5 rounded-lg text-gray-400 hover:text-white transition";
+        if (tabSignup) tabSignup.className = "py-2.5 rounded-lg text-purple-300 bg-purple-950/80 border border-purple-700/50 transition";
+        if (nameGroup) nameGroup.classList.remove('hidden');
+        if (submitBtn) submitBtn.innerText = "Create Free Account";
+        if (switchText) switchText.innerText = "Already have an account?";
+        if (switchBtn) switchBtn.innerText = "Sign In instead";
+      } else {
+        if (title) title.innerText = "Sign In to Backlink Hunter";
+        if (subtitle) subtitle.innerText = "Access autonomous SEO audits, backlink tracking, and outreach drafts.";
+        if (tabSignin) tabSignin.className = "py-2.5 rounded-lg text-purple-300 bg-purple-950/80 border border-purple-700/50 transition";
+        if (tabSignup) tabSignup.className = "py-2.5 rounded-lg text-gray-400 hover:text-white transition";
+        if (nameGroup) nameGroup.classList.add('hidden');
+        if (submitBtn) submitBtn.innerText = "Sign In";
+        if (switchText) switchText.innerText = "Don't have an account?";
+        if (switchBtn) switchBtn.innerText = "Sign Up free";
+      }
+    }
+
+    function toggleAuthMode() {
+      setAuthMode(currentAuthMode === 'signin' ? 'signup' : 'signin');
+    }
+
+    async function submitEmailAuth(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmailInput').value;
+      const password = document.getElementById('authPasswordInput').value;
+      const name = document.getElementById('authNameInput').value;
+
+      const endpoint = currentAuthMode === 'signup' ? '/api/auth/register' : '/api/auth/login';
+      const body = currentAuthMode === 'signup' ? { name, email, password } : { email, password };
+
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.user) {
+          localStorage.setItem('google_user', JSON.stringify(data.user));
+          renderAuthUI(data.user);
+          closeAuthModal();
+        }
+      } catch(err) {
+        // Fallback local user creation
+        const user = {
+          name: name || email.split('@')[0],
+          email: email,
+          picture: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
+        };
+        localStorage.setItem('google_user', JSON.stringify(user));
+        renderAuthUI(user);
+        closeAuthModal();
+      }
+    }
+
     function renderAuthUI(user) {
-      const googleBtn = document.getElementById('googleSignInBtn');
+      const loggedOutBox = document.getElementById('loggedOutButtons');
       const profileBadge = document.getElementById('userProfileBadge');
       if (user) {
-        if (googleBtn) googleBtn.classList.add('hidden');
+        if (loggedOutBox) loggedOutBox.classList.add('hidden');
         if (profileBadge) {
           profileBadge.classList.remove('hidden');
-          document.getElementById('userAvatar').src = user.picture || 'https://lh3.googleusercontent.com/a/default-user';
+          document.getElementById('userAvatar').src = user.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
           document.getElementById('userName').innerText = user.name;
         }
       } else {
         if (profileBadge) profileBadge.classList.add('hidden');
-        if (googleBtn) {
-          googleBtn.classList.remove('hidden');
-        }
+        if (loggedOutBox) loggedOutBox.classList.remove('hidden');
       }
     }
 
