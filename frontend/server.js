@@ -43,7 +43,21 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Frontend UI server running at http://127.0.0.1:${PORT}`);
   console.log(`Proxying /api requests to ${BACKEND_URL}`);
 });
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use by another process. Please close the existing instance or choose another port using PORT=3001 npm run dev.`);
+  } else {
+    console.error('Server error:', err);
+  }
+  process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+

@@ -440,9 +440,28 @@
   </div>
 
   <!-- Application Logic -->
+  <script>
     const RENDER_BACKEND_URL = "https://seo-agent-backend.onrender.com";
     const API_BASE = "";
     const GOOGLE_CLIENT_ID = "411176906066-ctilf76ua21mrim2cot5skr7uckiqq4d.apps.googleusercontent.com";
+
+    function copyEncodedText(encodedText) {
+      if (!encodedText) return;
+      try {
+        const decoded = decodeURIComponent(encodedText);
+        navigator.clipboard.writeText(decoded);
+      } catch (e) {
+        console.error("Failed to copy text:", e);
+      }
+    }
+
+    function copyPitch(btn) {
+      if (btn) copyEncodedText(btn.getAttribute('data-pitch'));
+    }
+
+    function copyFix(btn) {
+      if (btn) copyEncodedText(btn.getAttribute('data-fix'));
+    }
 
     function parseJwt(token) {
       try {
@@ -980,7 +999,7 @@
                     <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs space-y-1.5">
                       <div class="flex justify-between items-center">
                         <span class="text-[10px] font-bold text-gray-500 uppercase">AI Outreach Draft</span>
-                        <button onclick="navigator.clipboard.writeText('${(opp.outreach_draft || '').replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="text-[10px] font-bold text-purple-300 hover:text-white">Copy Pitch</button>
+                        <button data-pitch="${encodeURIComponent(opp.outreach_draft || '')}" onclick="copyPitch(this)" class="text-[10px] font-bold text-purple-300 hover:text-white">Copy Pitch</button>
                       </div>
                       <p class="text-[11px] text-gray-300 italic line-clamp-3">"${opp.outreach_draft}"</p>
                     </div>
@@ -1025,7 +1044,7 @@
                 <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${badgeColor}">${severity}</span>
                 <span class="text-[10px] font-bold uppercase px-2.5 py-1 rounded-md bg-purple-950/80 text-purple-300 border border-purple-800/40">${catName}</span>
               </div>
-              <button onclick="navigator.clipboard.writeText('${rawFix.replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-xs text-purple-300 font-bold rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
+              <button data-fix="${encodeURIComponent(rawFix)}" onclick="copyFix(this)" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-xs text-purple-300 font-bold rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 Copy Fix
               </button>
@@ -1114,7 +1133,7 @@
             <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
               <div class="flex justify-between items-center">
                 <span class="text-xs font-semibold text-gray-400">AI Outreach Pitch</span>
-                <button onclick="navigator.clipboard.writeText('${opp.outreach_draft.replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs text-purple-300 rounded font-bold">Copy Pitch</button>
+                <button data-pitch="${encodeURIComponent(opp.outreach_draft || '')}" onclick="copyPitch(this)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs text-purple-300 rounded font-bold">Copy Pitch</button>
               </div>
               <p class="text-xs text-gray-300 italic whitespace-pre-line">"${opp.outreach_draft}"</p>
             </div>
