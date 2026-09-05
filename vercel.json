@@ -1,19 +1,13 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "frontend/public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "https://seo-agent-backend.onrender.com/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://seo-agent-backend.onrender.com/api/:path*"
     },
     {
-      "src": "/(.*)",
-      "dest": "/frontend/public/$1"
+      "source": "/(.*)",
+      "destination": "/frontend/public/$1"
     }
   ]
 }
