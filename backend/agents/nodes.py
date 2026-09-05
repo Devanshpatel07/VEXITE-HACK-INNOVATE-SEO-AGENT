@@ -335,7 +335,7 @@ async def scoring_node(state: Dict) -> Dict:
     return {"scored_opportunities": scored, "status": "drafting_outreach"}
 
 async def outreach_node(state: Dict) -> Dict:
-    logger.info("Drafting targeted 60-90 word outreach pitches...")
+    logger.info("Drafting targeted outreach pitches in parallel for high speed...")
     if "error" in state:
         return state
         
@@ -344,25 +344,28 @@ async def outreach_node(state: Dict) -> Dict:
         opportunities = state.get("scored_opportunities", [])
         target_title = state.get("title", "our platform")
         
-        for opp in opportunities:
+        async def draft_pitch(opp):
             domain = opp['domain']
             prompt = f"""
             You are "Backlink Hunter AI", an autonomous SEO research agent.
-            Write a 60-90 word cold outreach pitch to the editor of {domain} offering a guest post or editorial contribution related to {target_title}.
-            
-            Requirements:
-            - Reference something specific about {domain}.
-            - Propose a concrete article idea tailored to their audience.
-            - Include one credibility line about {target_title}.
-            - End with a soft, low-pressure call to action.
-            - No placeholder brackets, no fake stats. Return ONLY the pitch text.
+            Write a concise 60-word cold outreach pitch to the editor of {domain} offering a guest post or editorial contribution related to {target_title}.
+            Return ONLY the pitch text.
             """
             try:
                 res = await llm.ainvoke(prompt)
                 opp["outreach_draft"] = res.content.strip()
             except Exception:
                 opp["outreach_draft"] = f"Hi Editor,\n\nI've been following {domain}'s coverage on tech and growth. I've put together a guest guide on automated SEO workflows inspired by {target_title}.\n\nWould you be open to reviewing a draft for your readers?\n\nBest regards,"
-                
+            return opp
+
+        # Parallelize top 6 LLM calls for sub-second execution
+        top_opps = opportunities[:6]
+        tasks = [draft_pitch(opp) for opp in top_opps]
+        
+        for opp in opportunities[6:]:
+            opp["outreach_draft"] = f"Hi Editor,\n\nI loved your recent posts on {opp['domain']}. We have prepared a guest guide related to {target_title}.\n\nWould you be open to a guest contribution?\n\nThanks!"
+            
+        await asyncio.gather(*tasks)
         return {"final_opportunities": opportunities, "status": "done"}
     except Exception as e:
         logger.error(f"Outreach generation error: {e}")

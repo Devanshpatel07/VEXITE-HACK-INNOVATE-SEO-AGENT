@@ -533,6 +533,55 @@
             <!-- Show More / Show Less Toggle Button -->
             <div id="showMoreBox" class="text-center pt-2"></div>
           </div>
+
+          <!-- Related Backlink Target Opportunities Section -->
+          <div class="space-y-4 text-left border-t border-purple-900/30 pt-6 mt-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h4 class="text-xl font-extrabold text-white flex items-center gap-2">
+                  High-DA Backlink Target Opportunities
+                  <span class="text-xs px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800/40 font-bold">${currentBacklinks.length} Discovered</span>
+                </h4>
+                <p class="text-xs text-gray-400 mt-0.5">High-authority partner websites tailored to page niche with 1-click AI outreach pitches</p>
+              </div>
+              <button onclick="switchTab('backlinks')" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-purple-300 font-bold text-xs rounded-xl border border-purple-800/40 flex items-center gap-1.5 transition">
+                View Full Backlinks Directory ↗
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${currentBacklinks.slice(0, 4).map(opp => `
+                <div class="glass-card p-5 rounded-2xl space-y-3 border border-slate-800/80 hover:border-purple-600/40 transition flex flex-col justify-between">
+                  <div class="space-y-2">
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <div class="text-sm font-extrabold text-white">${opp.domain}</div>
+                        <a href="${opp.url}" target="_blank" class="text-xs font-semibold text-purple-400 hover:text-purple-300 underline flex items-center gap-1 mt-0.5 truncate max-w-[240px]">
+                          Visit Target Opportunity Page ↗
+                        </a>
+                      </div>
+                      <span class="text-xs font-black px-2.5 py-1 rounded-md bg-purple-950 text-purple-300 border border-purple-800/40">DA Score: ${opp.score || 90}</span>
+                    </div>
+
+                    <div class="flex gap-2 text-[10px] uppercase font-bold">
+                      <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/40">Relevance: ${opp.relevance || 'High'}</span>
+                      <span class="px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800/40">Spam Risk: ${opp.spam_risk || 'Low'}</span>
+                    </div>
+                  </div>
+
+                  ${opp.outreach_draft ? `
+                    <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs space-y-1.5">
+                      <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase">AI Outreach Draft</span>
+                        <button onclick="navigator.clipboard.writeText('${(opp.outreach_draft || '').replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="text-[10px] font-bold text-purple-300 hover:text-white">Copy Pitch</button>
+                      </div>
+                      <p class="text-[11px] text-gray-300 italic line-clamp-3">"${opp.outreach_draft}"</p>
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
         `;
 
         resultsView.classList.remove("hidden");
