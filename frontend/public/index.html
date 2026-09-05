@@ -672,7 +672,12 @@
       document.getElementById(`tab-${tab}`).classList.remove('hidden');
       document.getElementById(`nav-${tab}`).className = "px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-purple-950/80 border border-purple-700/50 text-purple-300";
 
-      if (tab === 'backlinks') {
+      if (tab === 'audit') {
+        const input = document.getElementById("urlInput");
+        if (input && !input.value.trim()) {
+          input.value = "example.com";
+        }
+      } else if (tab === 'backlinks') {
         renderBacklinks();
       }
     }
@@ -680,7 +685,13 @@
     async function runDomainAudit(e) {
       e.preventDefault();
       const input = document.getElementById("urlInput");
-      let url = input.value.trim();
+      let rawDomain = input ? input.value.trim() : "";
+      if (!rawDomain) {
+        rawDomain = "example.com";
+        if (input) input.value = rawDomain;
+      }
+
+      let url = rawDomain;
       if (!url.startsWith("http://") && !url.startsWith("https://")) {
         url = "https://" + url;
       }
@@ -827,8 +838,9 @@
       renderBacklinks();
 
       document.getElementById("auditedDomainName").innerText = domainName;
-      document.getElementById("auditedDomainUrl").innerText = targetUrl;
-      document.getElementById("auditResultsView").classList.remove("hidden");
+      const resultsView = document.getElementById("auditResultsView");
+      resultsView.classList.remove("hidden");
+      resultsView.scrollIntoView({ behavior: 'smooth' });
     }
 
     let currentAuditIssues = [];
@@ -980,6 +992,7 @@
         `;
 
         resultsView.classList.remove("hidden");
+        resultsView.scrollIntoView({ behavior: 'smooth' });
         renderAuditIssues();
       } catch (err) {
         console.error(err);
