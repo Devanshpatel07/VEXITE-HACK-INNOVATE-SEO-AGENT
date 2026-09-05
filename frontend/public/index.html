@@ -558,6 +558,8 @@
         const severity = (iss.severity || 'medium').toLowerCase();
         const badgeColor = severity === 'high' ? 'bg-red-950 text-red-300 border-red-800/50' : severity === 'medium' ? 'bg-amber-950 text-amber-300 border-amber-800/50' : 'bg-blue-950 text-blue-300 border-blue-800/50';
         const catName = iss.category || 'On-Page SEO';
+        const rawFix = iss.fix_recommendation || '';
+        const escapedFix = rawFix.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
         return `
           <div class="glass-card p-5 rounded-2xl space-y-3 border border-slate-800/80 hover:border-purple-600/40 transition">
@@ -566,7 +568,7 @@
                 <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${badgeColor}">${severity}</span>
                 <span class="text-[10px] font-bold uppercase px-2.5 py-1 rounded-md bg-purple-950/80 text-purple-300 border border-purple-800/40">${catName}</span>
               </div>
-              <button onclick="navigator.clipboard.writeText('${(iss.fix_recommendation || '').replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-xs text-purple-300 font-bold rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
+              <button onclick="navigator.clipboard.writeText('${rawFix.replace(/\n/g, '\\n').replace(/'/g, "\\'")}')" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-xs text-purple-300 font-bold rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 Copy Fix
               </button>
@@ -577,10 +579,10 @@
               <p class="text-xs text-gray-300 mt-1 leading-relaxed">${iss.explanation}</p>
             </div>
 
-            ${iss.fix_recommendation ? `
+            ${rawFix ? `
               <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 font-mono text-xs text-purple-200 overflow-x-auto">
                 <span class="text-[10px] font-sans font-bold text-gray-500 uppercase block mb-1">Recommended Implementation:</span>
-                <code>${iss.fix_recommendation}</code>
+                <code>${escapedFix}</code>
               </div>
             ` : ''}
           </div>
