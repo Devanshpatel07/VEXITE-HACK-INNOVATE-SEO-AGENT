@@ -81,7 +81,8 @@
         </div>
       </button>
 
-      <nav class="flex items-center gap-2">
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex items-center gap-2">
         <button id="nav-home" onclick="switchTab('home')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-purple-950/80 border border-purple-700/50 text-purple-300">
           Home
         </button>
@@ -95,7 +96,7 @@
           Privacy
         </button>
 
-        <!-- Google Authentication Widget -->
+        <!-- Google Authentication Widget (Desktop) -->
         <div id="googleAuthNav" class="ml-2 flex items-center gap-2">
           <div id="g_id_onload"
             data-client_id="411176906066-ctilf76ua21mrim2cot5skr7uckiqq4d.apps.googleusercontent.com"
@@ -113,6 +114,32 @@
           </div>
         </div>
       </nav>
+
+      <!-- Mobile Hamburger Button -->
+      <div class="flex items-center gap-2 md:hidden">
+        <div id="googleSignInBtnMobile" class="g_id_signin" data-type="icon" data-shape="circle" data-theme="outline"></div>
+        <button onclick="toggleMobileMenu()" class="p-2 rounded-xl bg-slate-900 border border-purple-800/40 text-purple-300 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation Menu -->
+    <div id="mobileMenuDropdown" class="hidden md:hidden glass-header border-t border-purple-900/40 px-4 py-3 space-y-2">
+      <button onclick="switchTab('home'); toggleMobileMenu();" class="w-full text-left px-4 py-2 rounded-xl text-sm font-bold text-purple-300 bg-purple-950/60 border border-purple-800/40">
+        Home
+      </button>
+      <button onclick="switchTab('audit'); toggleMobileMenu();" class="w-full text-left px-4 py-2 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/5">
+        SEO Audit
+      </button>
+      <button onclick="switchTab('backlinks'); toggleMobileMenu();" class="w-full text-left px-4 py-2 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/5">
+        Backlinks
+      </button>
+      <button onclick="switchTab('privacy'); toggleMobileMenu();" class="w-full text-left px-4 py-2 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/5">
+        Privacy
+      </button>
     </div>
   </header>
 
@@ -375,6 +402,11 @@
     function logoutGoogleUser() {
       localStorage.removeItem('google_user');
       renderAuthUI(null);
+    }
+
+    function toggleMobileMenu() {
+      const dropdown = document.getElementById('mobileMenuDropdown');
+      if (dropdown) dropdown.classList.toggle('hidden');
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -764,20 +796,21 @@
     function renderBacklinks() {
       const grid = document.getElementById("backlinksGrid");
       grid.innerHTML = currentBacklinks.map(opp => `
-        <div class="glass-card p-6 rounded-2xl space-y-4 text-left">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                ${opp.domain}
-                <a href="${opp.url}" target="_blank" class="text-gray-500 hover:text-white">↗</a>
-              </h3>
-              <p class="text-xs text-gray-400 truncate max-w-xs mt-1">${opp.url}</p>
+        <div class="glass-card p-5 sm:p-6 rounded-2xl space-y-4 text-left flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex justify-between items-start gap-2">
+              <div class="min-w-0 flex-1">
+                <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2 truncate">
+                  ${opp.domain}
+                  <a href="${opp.url}" target="_blank" class="text-purple-400 hover:text-purple-300">↗</a>
+                </h3>
+                <p class="text-xs text-gray-400 truncate max-w-[180px] sm:max-w-xs mt-1">${opp.url}</p>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="text-xl sm:text-2xl font-black text-purple-400">${opp.score}</span>
+                <div class="text-[9px] text-gray-500 uppercase">DA Score</div>
+              </div>
             </div>
-            <div class="text-right">
-              <span class="text-2xl font-black text-purple-400">${opp.score}</span>
-              <div class="text-[9px] text-gray-500 uppercase">Domain Score</div>
-            </div>
-          </div>
 
           <div class="flex flex-wrap gap-2 text-xs">
             <span class="px-2.5 py-1 rounded bg-purple-950 text-purple-300 font-medium">Relevance: ${opp.relevance || 'High'}</span>
