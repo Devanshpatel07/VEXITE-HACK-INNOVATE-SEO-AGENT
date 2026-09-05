@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -93,6 +94,24 @@
         <button id="nav-privacy" onclick="switchTab('privacy')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-gray-400 hover:text-white hover:bg-white/5">
           Privacy
         </button>
+
+        <!-- Google Authentication Widget -->
+        <div id="googleAuthNav" class="ml-2 flex items-center gap-2">
+          <div id="g_id_onload"
+            data-client_id="411176906066-ctilf76ua21mrim2cot5skr7uckiqq4d.apps.googleusercontent.com"
+            data-callback="handleCredentialResponse"
+            data-auto_prompt="false">
+          </div>
+          <div id="googleSignInBtn" class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-size="small"></div>
+          
+          <div id="userProfileBadge" class="hidden flex items-center gap-2 bg-slate-900 border border-purple-800/40 rounded-xl px-2.5 py-1 shadow-lg">
+            <img id="userAvatar" src="" class="w-6 h-6 rounded-full border border-purple-400 object-cover" alt="User Avatar"/>
+            <span id="userName" class="text-xs font-bold text-white max-w-[90px] truncate"></span>
+            <button onclick="logoutGoogleUser()" title="Sign Out" class="text-gray-400 hover:text-red-400 transition p-0.5 ml-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            </button>
+          </div>
+        </div>
       </nav>
     </div>
   </header>
@@ -300,6 +319,70 @@
   <!-- Application Logic -->
   <script>
     const API_BASE = "";
+    const GOOGLE_CLIENT_ID = "411176906066-ctilf76ua21mrim2cot5skr7uckiqq4d.apps.googleusercontent.com";
+
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function handleCredentialResponse(response) {
+      const payload = parseJwt(response.credential);
+      if (payload) {
+        const user = {
+          name: payload.name || payload.given_name || 'User',
+          email: payload.email,
+          picture: payload.picture
+        };
+        localStorage.setItem('google_user', JSON.stringify(user));
+        renderAuthUI(user);
+
+        // Notify backend of authenticated session
+        fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        }).catch(console.error);
+      }
+    }
+
+    function renderAuthUI(user) {
+      const googleBtn = document.getElementById('googleSignInBtn');
+      const profileBadge = document.getElementById('userProfileBadge');
+      if (user) {
+        if (googleBtn) googleBtn.classList.add('hidden');
+        if (profileBadge) {
+          profileBadge.classList.remove('hidden');
+          document.getElementById('userAvatar').src = user.picture || 'https://lh3.googleusercontent.com/a/default-user';
+          document.getElementById('userName').innerText = user.name;
+        }
+      } else {
+        if (profileBadge) profileBadge.classList.add('hidden');
+        if (googleBtn) {
+          googleBtn.classList.remove('hidden');
+        }
+      }
+    }
+
+    function logoutGoogleUser() {
+      localStorage.removeItem('google_user');
+      renderAuthUI(null);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('google_user');
+      if (saved) {
+        try { renderAuthUI(JSON.parse(saved)); } catch(e) { renderAuthUI(null); }
+      }
+    });
 
     const defaultOpportunities = [
       {
